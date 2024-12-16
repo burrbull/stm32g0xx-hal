@@ -73,14 +73,18 @@ macro_rules! bus_reset {
         impl Reset for crate::stm32::$PER {
             #[inline(always)]
             fn reset(rcc: &mut Rcc) {
-                Self::Bus::rstr(rcc).modify(|_, w| w.$rst().set_bit());
-                Self::Bus::rstr(rcc).modify(|_, w| w.$rst().clear_bit());
+                let bits = Self::Bus::rstr(rcc).modify(|_, w| w.$rst().set_bit());
+                unsafe {
+                    Self::Bus::rstr(rcc).write(|w| w.bits(bits).$rst().clear_bit());
+                }
             }
             #[inline(always)]
             unsafe fn reset_unchecked() {
                 let rcc = &*RCC::ptr();
-                Self::Bus::rstr(rcc).modify(|_, w| w.$rst().set_bit());
-                Self::Bus::rstr(rcc).modify(|_, w| w.$rst().clear_bit());
+                let bits = Self::Bus::rstr(rcc).modify(|_, w| w.$rst().set_bit());
+                unsafe {
+                    Self::Bus::rstr(rcc).write(|w| w.bits(bits).$rst().clear_bit());
+                }
             }
         }
     };
